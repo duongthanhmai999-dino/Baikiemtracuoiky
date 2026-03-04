@@ -57,7 +57,7 @@
 .artist-popular-section {
     position: relative;
     z-index: 1;
-    padding: 28px 28px 32px;
+    padding: 28px 28px 0;
 }
 
 .artist-popular-title {
@@ -245,6 +245,20 @@
 .artist-popular-menu {
     font-size: 18px;
     color: rgba(255, 255, 255, 0.8);
+}
+
+/* Artist's Albums title */
+.artist-albums-title {
+    font-family: "Vazirmatn", sans-serif;
+    font-size: 38px;
+    font-weight: 700;
+    color: #fff;
+    margin: 0 0 0 20px;
+}
+
+.artist-albums-accent {
+    color: #36A7FF;
+    font-size: 38px;
 }
 
 .artist-popular-show-all {
