@@ -2,10 +2,9 @@ import { Router } from "express";
 import bcrypt from "bcryptjs";
 import crypto from "node:crypto";
 
-import { getDb } from "../db/sqlite.js";
+import { readUsers, writeUsers } from "../store/usersJsonStore.js";
 
 const router = Router();
-const db = getDb();
 
 function normalizeEmail(email) {
   return String(email || "").trim().toLowerCase();
@@ -40,11 +39,9 @@ router.post("/register", async (req, res) => {
       });
     }
 
-    // Email uniqueness (stored normalized)
-    const existing = db
-      .prepare("SELECT id FROM users WHERE email = ?")
-      .get(emailNorm);
-    if (existing) {
+    const users = readUsers();
+    const exists = users.some((u) => u.email === emailNorm);
+    if (exists) {
       return res.status(409).json({
         success: false,
         message: "Email này đã được đăng ký. Vui lòng đăng nhập.",
@@ -56,9 +53,7 @@ router.post("/register", async (req, res) => {
     const id = crypto.randomUUID();
     const createdAt = new Date().toISOString();
 
-    db.prepare(
-      "INSERT INTO users (id, role, name, email, password_hash, phone, created_at) VALUES (@id, @role, @name, @email, @password_hash, @phone, @created_at)"
-    ).run({
+    users.push({
       id,
       role: roleNormalized,
       name: nameTrimmed,
@@ -67,13 +62,13 @@ router.post("/register", async (req, res) => {
       phone: phoneTrimmed,
       created_at: createdAt,
     });
+    writeUsers(users);
 
     return res.json({
       success: true,
       message: "Đăng ký thành công! Chuyển đến trang đăng nhập...",
     });
   } catch (err) {
-    // Let errorHandler handle unexpected errors
     throw err;
   }
 });
@@ -90,9 +85,8 @@ router.post("/login", async (req, res) => {
       });
     }
 
-    const userRow = db
-      .prepare("SELECT id, role, name, email, password_hash, phone, created_at FROM users WHERE email = ?")
-      .get(emailNorm);
+    const users = readUsers();
+    const userRow = users.find((u) => u.email === emailNorm);
 
     if (!userRow) {
       return res.status(401).json({
@@ -121,4 +115,3 @@ router.post("/login", async (req, res) => {
 });
 
 export default router;
-
